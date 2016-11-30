@@ -3,10 +3,10 @@ package com.echessa.spplayer;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Created by echessa on 6/17/15.
+ * Created by echessa on 11/26/16.
  */
-public class Track {
 
+public class Track {
     @SerializedName("title")
     private String mTitle;
 
@@ -34,5 +34,4 @@ public class Track {
     public String getArtworkURL() {
         return mArtworkURL;
     }
-
 }

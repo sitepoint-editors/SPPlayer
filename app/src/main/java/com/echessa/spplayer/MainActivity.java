@@ -4,30 +4,25 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import retrofit.Callback;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainActivity";
     private List<Track> mListItems;
     private SCTrackAdapter mAdapter;
     private TextView mSelectedTrackTitle;
@@ -48,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
                 togglePlayPause();
             }
         });
-
         mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
@@ -64,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
         mSelectedTrackTitle = (TextView)findViewById(R.id.selected_track_title);
         mSelectedTrackImage = (ImageView)findViewById(R.id.selected_track_image);
         mPlayerControl = (ImageView)findViewById(R.id.player_control);
-
         mPlayerControl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -95,33 +88,22 @@ public class MainActivity extends AppCompatActivity {
         });
 
         SCService scService = SoundCloud.getService();
-        scService.getRecentTracks(new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new Date()), new Callback<List<Track>>() {
+        scService.getRecentTracks("last_week").enqueue(new Callback<List<Track>>() {
             @Override
-            public void success(List<Track> tracks, Response response) {
-                loadTracks(tracks);
+            public void onResponse(Call<List<Track>> call, Response<List<Track>> response) {
+                if (response.isSuccessful()) {
+                    List<Track> tracks = response.body();
+                    loadTracks(tracks);
+                } else {
+                    showMessage("Error code " + response.code());
+                }
             }
 
             @Override
-            public void failure(RetrofitError error) {
-                Log.d(TAG, "Error: " + error);
+            public void onFailure(Call<List<Track>> call, Throwable t) {
+                showMessage("Network Error: " +  t.getMessage());
             }
         });
-    }
-
-    private void loadTracks(List<Track> tracks) {
-        mListItems.clear();
-        mListItems.addAll(tracks);
-        mAdapter.notifyDataSetChanged();
-    }
-
-    private void togglePlayPause() {
-        if (mMediaPlayer.isPlaying()) {
-            mMediaPlayer.pause();
-            mPlayerControl.setImageResource(R.drawable.ic_play);
-        } else {
-            mMediaPlayer.start();
-            mPlayerControl.setImageResource(R.drawable.ic_pause);
-        }
     }
 
     @Override
@@ -137,25 +119,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    private void togglePlayPause() {
+        if (mMediaPlayer.isPlaying()) {
+            mMediaPlayer.pause();
+            mPlayerControl.setImageResource(R.drawable.ic_play);
+        } else {
+            mMediaPlayer.start();
+            mPlayerControl.setImageResource(R.drawable.ic_pause);
+        }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    private void loadTracks(List<Track> tracks) {
+        mListItems.clear();
+        mListItems.addAll(tracks);
+        mAdapter.notifyDataSetChanged();
+    }
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+    private void showMessage(String message) {
+        Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
     }
 }

@@ -13,8 +13,9 @@ import com.squareup.picasso.Picasso;
 import java.util.List;
 
 /**
- * Created by echessa on 6/18/15.
+ * Created by echessa on 11/26/16.
  */
+
 public class SCTrackAdapter extends BaseAdapter {
 
     private Context mContext;
